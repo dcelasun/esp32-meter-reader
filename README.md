@@ -35,8 +35,8 @@ The service extracts the reading and publishes it to Home Assistant via MQTT dis
 ## Hardware
 
 | Component | Description |
-|---|---|
-| [M5Stack Timer Camera X](https://docs.m5stack.com/en/unit/timercam_x) | ESP32-based camera with built-in battery, RTC, and deep sleep support. Has a 3MP OV3660 camera. |
+|---|---------------------------------------------------------------------------------------------------|
+| [M5Stack Timer Camera X](https://docs.m5stack.com/en/unit/timercam_x) | ESP32-based controller with built-in battery, RTC, and deep sleep support. Has a 3MP OV3660 camera. |
 | [M5Stack Unit FlashLight](https://docs.m5stack.com/en/unit/FlashLight) | LED flash unit. Connected via the GROVE port. Required for meters installed in dark enclosures. |
 
 ## OCR Service
@@ -128,7 +128,7 @@ All options can be set via CLI flags or environment variables. Flags take preced
 | `--mqtt-device-id` | `MQTT_DEVICE_ID` | `water_meter` | Device identifier for MQTT and HA discovery |
 | `--mqtt-device-manufacturer` | `MQTT_DEVICE_MANUFACTURER` | `Generic` | Manufacturer shown in Home Assistant |
 | `--mqtt-device-model` | `MQTT_DEVICE_MODEL` | `Generic` | Model shown in Home Assistant |
-| `--meter-divisor` | `METER_DIVISOR` | `1000` | Divisor to convert raw reading to m³ (e.g. `000354225` / 1000 = `354.225`) |
+| `--meter-divisor` | `METER_DIVISOR` | `1000` | Divisor to convert raw reading to m³ (e.g. `000354225` / `1000` = `354.225`) |
 
 ### MQTT / Home Assistant
 
