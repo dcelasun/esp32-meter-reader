@@ -22,6 +22,7 @@ type haDiscoveryConfig struct {
 	StateClass        string   `json:"state_class,omitempty"`
 	UnitOfMeasurement string   `json:"unit_of_measurement,omitempty"`
 	Icon              string   `json:"icon,omitempty"`
+	EntityCategory    string   `json:"entity_category,omitempty"`
 }
 
 type haDevice struct {
@@ -106,6 +107,7 @@ func publishDiscovery() {
 			DeviceClass:       "battery",
 			StateClass:        "measurement",
 			UnitOfMeasurement: "%",
+			EntityCategory:    "diagnostic",
 		},
 		{
 			Name:              "Water Meter Battery Voltage",
@@ -117,6 +119,7 @@ func publishDiscovery() {
 			DeviceClass:       "voltage",
 			StateClass:        "measurement",
 			UnitOfMeasurement: "mV",
+			EntityCategory:    "diagnostic",
 		},
 	}
 
