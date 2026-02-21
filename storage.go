@@ -1,0 +1,68 @@
+package main
+
+import (
+	"encoding/csv"
+	"log"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+)
+
+var csvMu sync.Mutex
+
+func appendCSV(csvPath, imagePath, reading string) error {
+	csvMu.Lock()
+	defer csvMu.Unlock()
+
+	f, err := os.OpenFile(csvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	if err := w.Write([]string{imagePath, reading, time.Now().UTC().Format(time.RFC3339)}); err != nil {
+		return err
+	}
+	w.Flush()
+	return w.Error()
+}
+
+func storeReading(imageData, croppedData []byte, reading string) {
+	if storagePath == "" || reading == "" {
+		return
+	}
+
+	now := time.Now().UTC()
+	relDir := filepath.Join(
+		now.Format("2006"),
+		now.Format("01"),
+		now.Format("02"),
+	)
+	baseName := now.Format("15-04-05")
+	relPath := filepath.Join(relDir, baseName+".jpg")
+	fullPath := filepath.Join(storagePath, relPath)
+
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		log.Printf("storage mkdir error: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(fullPath, imageData, 0644); err != nil {
+		log.Printf("storage write error: %v", err)
+		return
+	}
+
+	if croppedData != nil {
+		croppedPath := filepath.Join(storagePath, relDir, baseName+"_cropped.jpg")
+		if err := os.WriteFile(croppedPath, croppedData, 0644); err != nil {
+			log.Printf("storage write cropped error: %v", err)
+		}
+	}
+
+	csvPath := filepath.Join(storagePath, "readings.csv")
+	if err := appendCSV(csvPath, relPath, reading); err != nil {
+		log.Printf("csv append error: %v", err)
+	}
+}

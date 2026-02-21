@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: esp32-meter-reader-mqtt
+  namespace: meter-reader
+type: Opaque
+stringData:
+  MQTT_USER: "homeassistant"
+  MQTT_PASSWORD: "changeme"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: esp32-meter-reader-data
+  namespace: meter-reader
+spec:
+  storageClassName: my-storage-class
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esp32-meter-reader
+  namespace: meter-reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esp32-meter-reader
+  template:
+    metadata:
+      labels:
+        app: esp32-meter-reader
+    spec:
+      containers:
+        - name: esp32-meter-reader
+          image: ghcr.io/dcelasun/esp32-meter-reader:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: STORAGE_PATH
+              value: /data
+            # Crop rectangle to isolate the meter display (x0,y0,x1,y1)
+            # - name: CROP
+            #   value: "100,200,400,350"
+            - name: MQTT_BROKER
+              value: tcp://mosquitto.default.svc:1883
+            - name: MQTT_TOPIC_PREFIX
+              value: meter-reader
+            - name: MQTT_DEVICE_ID
+              value: water_meter
+            - name: MQTT_DEVICE_MANUFACTURER
+              value: Generic
+            - name: MQTT_DEVICE_MODEL
+              value: Generic
+            - name: METER_DIVISOR
+              value: "1000"
+          envFrom:
+            - secretRef:
+                name: esp32-meter-reader-mqtt
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "2"
+            limits:
+              memory: "2Gi"
+              cpu: "4"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: esp32-meter-reader-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: esp32-meter-reader
+  namespace: meter-reader
+spec:
+  selector:
+    app: esp32-meter-reader
+  ports:
+    - port: 8080
+      name: http-port
+      targetPort: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: esp32-meter-reader-monitor
+  namespace: meter-reader
+  labels:
+    release: monitoring
+    app: esp32-meter-reader
+spec:
+  jobLabel: name
+  endpoints:
+    - interval: 60s
+      port: http-port
+      path: /metrics
+      metricRelabelings:
+        - action: labeldrop
+          regex: (instance|pod)
+  selector:
+    matchLabels:
+      app: esp32-meter-reader
