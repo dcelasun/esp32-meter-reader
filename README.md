@@ -100,7 +100,7 @@ Open [`esp32/m5stack_timer_camera_x.ino`](esp32/m5stack_timer_camera_x.ino) and 
 #define SLEEP_INTERVAL_SECS 14400    // Seconds between readings (14400 = 4 hours)
 ```
 
-The FlashLight brightness is set to mode `9` (100% brightness, 1.3s duration) in `sendImage()`. See the brightness table in the sketch for other modes. If your meter is well-lit, you can set it to `0` to disable the flash entirely.
+The FlashLight brightness is set to mode `1` (100% brightness, 220ms duration) in `sendImage()`. See the brightness table in the sketch for other modes. If your meter is well-lit, you can set it to `0` to disable the flash entirely.
 
 ### Upload
 
@@ -108,7 +108,7 @@ The FlashLight brightness is set to mode `9` (100% brightness, 1.3s duration) in
 2. Select board **M5Stack-Timer-CAM** in the Arduino IDE.
 3. Upload the sketch.
 
-The device will immediately take a photo, POST it to the configured server, and enter deep sleep. The onboard LED does a breathing animation on each wake cycle to confirm the device is alive.
+The device will immediately take a photo, POST it to the configured server, and enter deep sleep. The onboard LED will briefly flash on each wake cycle to confirm the device is alive.
 
 ## Configuration
 

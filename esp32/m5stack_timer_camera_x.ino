@@ -32,29 +32,17 @@
 
 void unit_flash_set_brightness(uint8_t brightness);
 
-void led_breathe(int ms) {
-    for (int16_t i = 0; i < 255; i++) {
-        TimerCAM.Power.setLed(i);
-        vTaskDelay(pdMS_TO_TICKS(ms));
-    }
-
-    for (int16_t i = 255; i >= 0; i--) {
-        TimerCAM.Power.setLed(i);
-        vTaskDelay(pdMS_TO_TICKS(ms));
-    }
+void led_flash(int ms) {
+    TimerCAM.Power.setLed(127);
+    vTaskDelay(pdMS_TO_TICKS(ms));
+    TimerCAM.Power.setLed(0);
 }
 
 // See https://github.com/m5stack/TimerCam-arduino/issues/16
 void setup() {
     TimerCAM.begin(true);
     Serial.println("Waking up");
-    led_breathe(10);
-
-    int batVoltage = TimerCAM.Power.getBatteryVoltage();
-    int batLevel   = TimerCAM.Power.getBatteryLevel();
-
-    Serial.printf("Bat Voltage: %dmv\r\n", batVoltage);
-    Serial.printf("Bat Level: %d%%\r\n", batLevel);
+    led_flash(1000);
 
     pinMode(FLASH_EN_PIN, OUTPUT);
 
@@ -126,15 +114,21 @@ WiFiClient connectToWiFi() {
     return wifi;
 }
 
-bool sendImage(WiFiClient wifi, int batLevel, int batVoltage) {
-    unit_flash_set_brightness(9);
-    delay(200);
+bool sendImage(WiFiClient wifi) {
+    unit_flash_set_brightness(1);
+    delay(100);
     if (!TimerCAM.Camera.get()) {
         unit_flash_set_brightness(0);
         Serial.println("Could not get camera");
         return false;
     }
     unit_flash_set_brightness(0);
+
+    int batVoltage = TimerCAM.Power.getBatteryVoltage();
+    int batLevel   = TimerCAM.Power.getBatteryLevel();
+
+    Serial.printf("Bat Voltage: %dmv\r\n", batVoltage);
+    Serial.printf("Bat Level: %d%%\r\n", batLevel);
 
     HttpClient client = HttpClient(wifi, _SERVER_HOST, _SERVER_PORT);
 
