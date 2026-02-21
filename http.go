@@ -45,6 +45,7 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 
 	// Respond immediately so the ESP32 can go back to sleep.
 	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("ok"))
 
 	// Process OCR in the background.
 	go processOCR(imageData, batLevel, batVoltage)
