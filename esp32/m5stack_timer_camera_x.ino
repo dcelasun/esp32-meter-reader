@@ -154,7 +154,7 @@ bool sendImage(WiFiClient wifi, int batLevel, int batVoltage) {
 
     TimerCAM.Camera.free();
 
-    if (statusCode != 200) {
+    if (statusCode != 202) {
         Serial.println("Upload failed");
         return false;
     }
