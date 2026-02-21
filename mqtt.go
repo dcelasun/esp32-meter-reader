@@ -86,7 +86,7 @@ func publishDiscovery() {
 
 	sensors := []haDiscoveryConfig{
 		{
-			Name:              "Water Meter Reading",
+			Name:              "Reading",
 			UniqueID:          mqttDeviceID + "_reading",
 			StateTopic:        stateTopic(),
 			ValueTemplate:     "{{ value_json.reading }}",
@@ -98,7 +98,7 @@ func publishDiscovery() {
 			Icon:              "mdi:water",
 		},
 		{
-			Name:              "Water Meter Battery",
+			Name:              "Battery",
 			UniqueID:          mqttDeviceID + "_battery",
 			StateTopic:        stateTopic(),
 			ValueTemplate:     "{{ value_json.bat_level }}",
@@ -110,7 +110,7 @@ func publishDiscovery() {
 			EntityCategory:    "diagnostic",
 		},
 		{
-			Name:              "Water Meter Battery Voltage",
+			Name:              "Battery Voltage",
 			UniqueID:          mqttDeviceID + "_battery_voltage",
 			StateTopic:        stateTopic(),
 			ValueTemplate:     "{{ value_json.bat_voltage }}",
