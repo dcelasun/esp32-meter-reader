@@ -63,6 +63,9 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		}
 	}
 
+	// Store images to disk before OCR so we have them even if OCR fails.
+	imagePath := storeImages(imageData, croppedData)
+
 	tmpDir, err := os.MkdirTemp("", "ocr-")
 	if err != nil {
 		log.Printf("failed to create temp dir: %v", err)
@@ -97,7 +100,8 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		}
 	}
 
-	storeReading(imageData, croppedData, reading)
+	// Append reading to CSV now that we have a result.
+	storeReading(imagePath, reading)
 
 	if mqttBroker != "" && reading != "" {
 		if val, err := strconv.ParseFloat(reading, 64); err == nil {

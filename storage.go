@@ -29,9 +29,11 @@ func appendCSV(csvPath, imagePath, reading string) error {
 	return w.Error()
 }
 
-func storeReading(imageData, croppedData []byte, reading string) {
-	if storagePath == "" || reading == "" {
-		return
+// storeImages saves the original image (and cropped image if available) to disk.
+// Returns the relative path of the original image, or empty string if storage is disabled.
+func storeImages(imageData, croppedData []byte) string {
+	if storagePath == "" {
+		return ""
 	}
 
 	now := time.Now().UTC()
@@ -46,12 +48,12 @@ func storeReading(imageData, croppedData []byte, reading string) {
 
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
 		log.Printf("storage mkdir error: %v", err)
-		return
+		return ""
 	}
 
 	if err := os.WriteFile(fullPath, imageData, 0644); err != nil {
 		log.Printf("storage write error: %v", err)
-		return
+		return ""
 	}
 
 	if croppedData != nil {
@@ -61,8 +63,17 @@ func storeReading(imageData, croppedData []byte, reading string) {
 		}
 	}
 
+	return relPath
+}
+
+// storeReading appends a row to readings.csv.
+func storeReading(imagePath, reading string) {
+	if storagePath == "" || imagePath == "" || reading == "" {
+		return
+	}
+
 	csvPath := filepath.Join(storagePath, "readings.csv")
-	if err := appendCSV(csvPath, relPath, reading); err != nil {
+	if err := appendCSV(csvPath, imagePath, reading); err != nil {
 		log.Printf("csv append error: %v", err)
 	}
 }
