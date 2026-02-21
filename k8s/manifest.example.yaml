@@ -100,6 +100,25 @@ spec:
       name: http-port
       targetPort: 8080
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: esp32-meter-reader
+  namespace: meter-reader
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: meter-reader.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: esp32-meter-reader
+                port:
+                  number: 8080
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
