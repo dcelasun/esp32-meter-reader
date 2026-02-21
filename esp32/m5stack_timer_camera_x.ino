@@ -48,17 +48,20 @@ void setup() {
 
     if (!configureCamera()) {
         Serial.println("Camera configuration failed, halting");
+        TimerCAM.Power.timerSleep(SLEEP_INTERVAL_SECS);
         return;
     }
 
     WiFiClient wifi = connectToWiFi();
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi connection failed, halting");
+        TimerCAM.Power.timerSleep(SLEEP_INTERVAL_SECS);
         return;
     }
 
     if (!sendImage(wifi, batLevel, batVoltage)) {
         Serial.println("Image upload failed, halting");
+        TimerCAM.Power.timerSleep(SLEEP_INTERVAL_SECS);
         return;
     }
 
