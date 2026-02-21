@@ -1,6 +1,18 @@
 # esp32-meter-reader
 
-Reads water meter digits using an ESP32 camera and PaddleOCR. The ESP32 wakes from deep sleep on a timer, takes a photo of the meter, and POSTs the JPEG to an OCR service. The service extracts the reading and publishes it to Home Assistant via MQTT discovery, with Prometheus metrics for monitoring.
+Reads water meter digits using an ESP32 camera and PaddleOCR. Battery powered, no cables.
+
+## How It Works
+
+The ESP32 wakes from deep sleep on a timer, takes a photo of the meter, and POSTs the JPEG to your self-hosted OCR service.
+The service extracts the reading and publishes it to Home Assistant via MQTT discovery, with Prometheus metrics for monitoring.
+
+## Sample
+
+  <p align="center">
+    <img src="/docs/sample-meter-photo.jpg" width="200"><br><br>
+    <img src="docs/sample-home-assistant-mqtt.png" width="200">
+  </p>
 
 ## Table of Contents
 
@@ -17,6 +29,7 @@ Reads water meter digits using an ESP32 camera and PaddleOCR. The ESP32 wakes fr
   - [Storage](#storage)
 - [API](#api)
 - [Local Development](#local-development)
+- [Compared to Other Projects](#compared-to-other-projects)
 
 ## Hardware
 
@@ -196,3 +209,17 @@ go build -o esp32-meter-reader .
 # Requires Python 3.13+ with paddlepaddle==3.2.2 and paddleocr installed
 ./esp32-meter-reader --ocr-script ocr.py --python-bin /path/to/venv/bin/python3
 ```
+
+## Compared to Other Projects
+
+esp32-meter-reader was inspired by [AI-on-the-edge-device](https://github.com/jomjol/AI-on-the-edge-device).
+
+That's a great project, but it didn't fit my use case very well. Specifically:
+
+- It needs an SD card to work. I wanted to use my existing M5Stack Timer Camera X, which does not have an SD card slot.
+- Its pre-trained model is optimized for meters with mechanical digits. My meter has a digital display.
+- Similarly, its model expects a clear image from a close distance. My meter is installed in a dark cabinet, and I could only place the camera at a distance.
+- I wanted to use a battery-powered solution, without needing to plug in a cable, which was infeasible for my cabinet.
+
+Given these constraints, any character recognition would have to happen off device. So I wrote my own service that runs on Docker or Kubernetes.
+This way, the camera only briefly wakes up to take a photo, send it to the OCR service, and then goes back to sleep. This ensures that the battery lasts a long time, even with the flash attached.
