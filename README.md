@@ -5,19 +5,20 @@ Reads water meter digits using an ESP32 camera and PaddleOCR. Battery powered, n
 ## How It Works
 
 The ESP32 wakes from deep sleep on a timer, takes a photo of the meter, and POSTs the JPEG to your self-hosted OCR service.
+
 The service extracts the reading and publishes it to Home Assistant via MQTT discovery, with Prometheus metrics for monitoring.
 
-## Sample
+## Example
 
   <p align="center">
-    <img src="/docs/sample-meter-photo.jpg" width="200"><br><br>
+    <img src="/docs/sample-meter-photo.jpg" width="200"> 
     <img src="docs/sample-home-assistant-mqtt.png" width="200">
   </p>
 
 ## Table of Contents
 
 - [Hardware](#hardware)
-- [Deploy OCR Service](#deploy-ocr-service)
+- [OCR Service](#ocr-service)
   - [Docker](#docker)
   - [Kubernetes](#kubernetes)
 - [ESP32 Installation](#esp32-installation)
@@ -35,12 +36,10 @@ The service extracts the reading and publishes it to Home Assistant via MQTT dis
 
 | Component | Description |
 |---|---|
-| [M5Stack Timer Camera X](https://docs.m5stack.com/en/unit/timercam_x) | ESP32-based camera with built-in battery, RTC, and deep sleep support. The 3MP OV3660 sensor captures the meter image. |
-| [M5Stack Unit FlashLight](https://docs.m5stack.com/en/unit/FlashLight) | Attachable LED flash unit. Connected via the GROVE port (I2C/GPIO), controlled by pulsing the SDA pin (G4). Required for meters installed in dark enclosures. |
+| [M5Stack Timer Camera X](https://docs.m5stack.com/en/unit/timercam_x) | ESP32-based camera with built-in battery, RTC, and deep sleep support. Has a 3MP OV3660 camera. |
+| [M5Stack Unit FlashLight](https://docs.m5stack.com/en/unit/FlashLight) | LED flash unit. Connected via the GROVE port. Required for meters installed in dark enclosures. |
 
-The FlashLight unit plugs into the Timer Camera X's GROVE port.
-
-## Deploy OCR Service
+## OCR Service
 
 The service listens on port **8080** by default. Note the hostname or IP address where you deploy it — you'll need it when configuring the Arduino sketch.
 
@@ -73,7 +72,7 @@ cp k8s/manifest.example.yaml k8s/manifest.yaml
 kubectl apply -f k8s/manifest.yaml
 ```
 
-The manifest includes a Secret for MQTT credentials, a PVC for image storage, a Deployment, and a Service. See [`k8s/manifest.example.yaml`](k8s/manifest.example.yaml) for all available environment variables.
+The manifest includes a Secret for MQTT credentials, a PVC for image storage, a Deployment, a Service, and a ServiceMonitor for Prometheus metrics. See [`k8s/manifest.example.yaml`](k8s/manifest.example.yaml) for all available environment variables.
 
 ## ESP32 Installation
 
@@ -141,8 +140,6 @@ When `--mqtt-broker` is set, the service publishes [MQTT discovery](https://www.
 | Water Meter Battery | `battery` | % | `measurement` |
 | Water Meter Battery Voltage | `voltage` | mV | `measurement` |
 
-State is published as retained JSON to `<prefix>/<device_id>/state` after each successful OCR. An LWT message sets availability to `offline` if the connection drops.
-
 ### Storage
 
 When `--storage-path` is set, each successful reading stores:
@@ -156,8 +153,8 @@ When `--storage-path` is set, each successful reading stores:
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/ocr?bat_level=85&bat_voltage=4200` | `POST` | Submit a JPEG/PNG image as the request body. Returns JSON with OCR results. |
-| `/health` | `GET` | Returns `200 OK`.                                                           |
-| `/metrics` | `GET` | Prometheus metrics.                                                         |
+| `/health` | `GET` | Returns `200 OK`. |
+| `/metrics` | `GET` | Prometheus metrics. |
 
 **POST /ocr response:**
 
