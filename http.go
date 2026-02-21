@@ -38,6 +38,8 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	log.Printf("OCR request received: image_bytes=%d bat_level=%d bat_voltage=%d", len(imageData), batLevel, batVoltage)
+
 	if len(imageData) == 0 {
 		http.Error(w, "empty body", http.StatusBadRequest)
 		return

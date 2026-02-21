@@ -160,4 +160,5 @@ func publish(topic, payload string, retain bool) {
 	if token.Error() != nil {
 		log.Printf("MQTT publish error (%s): %v", topic, token.Error())
 	}
+	log.Printf("MQTT published payload %s to %s with retain=%v", payload, topic, retain)
 }
