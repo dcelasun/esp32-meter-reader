@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,12 +9,6 @@ import (
 	"strconv"
 	"time"
 )
-
-type ocrResult struct {
-	RawTexts []string  `json:"raw_texts"`
-	Scores   []float64 `json:"scores"`
-	Reading  string    `json:"reading"`
-}
 
 func handleOCR(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -51,6 +43,14 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Respond immediately so the ESP32 can go back to sleep.
+	w.WriteHeader(http.StatusAccepted)
+
+	// Process OCR in the background.
+	go processOCR(imageData, batLevel, batVoltage)
+}
+
+func processOCR(imageData []byte, batLevel, batVoltage int) {
 	var croppedData []byte
 	ocrData := imageData
 	if cropRect != nil {
@@ -65,14 +65,16 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 
 	tmpDir, err := os.MkdirTemp("", "ocr-")
 	if err != nil {
-		http.Error(w, "failed to create temp dir: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("failed to create temp dir: %v", err)
+		metricOCRErrors.Inc()
 		return
 	}
 	defer os.RemoveAll(tmpDir)
 
 	tmpFile := filepath.Join(tmpDir, "image.jpg")
 	if err := os.WriteFile(tmpFile, ocrData, 0644); err != nil {
-		http.Error(w, "failed to write temp file: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("failed to write temp file: %v", err)
+		metricOCRErrors.Inc()
 		return
 	}
 
@@ -84,7 +86,6 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metricOCRErrors.Inc()
 		log.Printf("ocr error: %v", err)
-		http.Error(w, fmt.Sprintf("OCR failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -104,16 +105,7 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result := ocrResult{
-		RawTexts: ocrOut.Texts,
-		Scores:   ocrOut.Scores,
-		Reading:  reading,
-	}
-
 	log.Printf("OCR completed in %s: reading=%s texts=%v", elapsed, reading, ocrOut.Texts)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
