@@ -94,6 +94,8 @@ kind: Service
 metadata:
   name: esp32-meter-reader
   namespace: meter-reader
+  labels:
+    app: esp32-meter-reader
 spec:
   selector:
     app: esp32-meter-reader
