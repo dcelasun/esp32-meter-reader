@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.0...v0.2.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* Restore OCR endpoint log ([bb88357](https://github.com/dcelasun/esp32-meter-reader/commit/bb88357f668b7ff76af7329196ffc5945aafb670))
+
 ## [0.2.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.1.0...v0.2.0) (2026-02-22)
 
 
