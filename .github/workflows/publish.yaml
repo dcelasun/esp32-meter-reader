@@ -16,17 +16,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          release-type: simple
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +29,18 @@ jobs:
 
       - name: Run tests
         run: go test -race -v ./...
+
+  release-please:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          release-type: simple
 
   build-and-push:
     needs: [release-please, test]
