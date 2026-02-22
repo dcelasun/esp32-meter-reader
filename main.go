@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/urfave/cli/v3"
+	cli "github.com/urfave/cli/v3"
 )
 
 // Config — populated by urfave/cli before the action runs.
@@ -17,6 +18,8 @@ var (
 	pythonBin   string
 	storagePath string
 	cropRect    *cropConfig
+	ocrMatchRe  *regexp.Regexp
+	ocrFix      *ocrFixRule
 
 	mqttBroker             string
 	mqttUser               string
@@ -60,6 +63,17 @@ func main() {
 				Name:    "crop",
 				Usage:   "Crop rectangle applied to images before OCR, as x0,y0,x1,y1 (disabled if empty)",
 				Sources: cli.EnvVars("CROP"),
+			},
+			&cli.StringFlag{
+				Name:    "ocr-match-regex",
+				Value:   `^000\d+$`,
+				Usage:   "Regex to identify the meter reading from OCR text results",
+				Sources: cli.EnvVars("OCR_MATCH_REGEX"),
+			},
+			&cli.StringFlag{
+				Name:    "ocr-fix-regex",
+				Usage:   "Regex substitution applied to OCR text before matching, as pattern=replacement (e.g. ^300=000)",
+				Sources: cli.EnvVars("OCR_FIX_REGEX"),
 			},
 			&cli.StringFlag{
 				Name:    "mqtt-broker",
@@ -121,6 +135,8 @@ func run(_ context.Context, cmd *cli.Command) error {
 	pythonBin = cmd.String("python-bin")
 	storagePath = cmd.String("storage-path")
 	cropRect = parseCropRect(cmd.String("crop"))
+	ocrMatchRe = regexp.MustCompile(cmd.String("ocr-match-regex"))
+	ocrFix = parseOCRFixRegex(cmd.String("ocr-fix-regex"))
 
 	mqttBroker = cmd.String("mqtt-broker")
 	mqttUser = cmd.String("mqtt-user")

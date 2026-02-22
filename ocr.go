@@ -81,19 +81,49 @@ type ocrOutput struct {
 	Scores []float64 `json:"scores"`
 }
 
-var digitsOnlyRe = regexp.MustCompile(`^\d+$`)
+type ocrFixRule struct {
+	Pattern     *regexp.Regexp
+	Replacement string
+}
 
-func extractReading(texts []string) string {
+func parseOCRFixRegex(s string) *ocrFixRule {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	idx := strings.Index(s, "=")
+	if idx < 0 {
+		log.Fatalf("ocr-fix-regex must be pattern=replacement, got: %q", s)
+	}
+	pattern := s[:idx]
+	replacement := s[idx+1:]
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		log.Fatalf("ocr-fix-regex: invalid pattern %q: %v", pattern, err)
+	}
+	return &ocrFixRule{Pattern: re, Replacement: replacement}
+}
+
+func extractReading(texts []string, matchRe *regexp.Regexp, fixRule *ocrFixRule) string {
+	// First pass: apply fix rule if set, then match.
 	for _, t := range texts {
 		t = strings.TrimSpace(t)
-		if strings.HasPrefix(t, "000") && digitsOnlyRe.MatchString(t) {
+		if fixRule != nil {
+			t = fixRule.Pattern.ReplaceAllString(t, fixRule.Replacement)
+		}
+		if matchRe.MatchString(t) {
 			return t
 		}
 	}
+	// Fallback: longest all-digit string.
+	digitsOnly := regexp.MustCompile(`^\d+$`)
 	best := ""
 	for _, t := range texts {
 		t = strings.TrimSpace(t)
-		if digitsOnlyRe.MatchString(t) && len(t) > len(best) {
+		if fixRule != nil {
+			t = fixRule.Pattern.ReplaceAllString(t, fixRule.Replacement)
+		}
+		if digitsOnly.MatchString(t) && len(t) > len(best) {
 			best = t
 		}
 	}

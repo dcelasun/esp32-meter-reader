@@ -121,6 +121,8 @@ All options can be set via CLI flags or environment variables. Flags take preced
 | `--python-bin` | `PYTHON_BIN` | `/usr/bin/python3` | Path to the Python binary |
 | `--storage-path` | `STORAGE_PATH` | *(disabled)* | Directory to store images and `readings.csv` |
 | `--crop` | `CROP` | *(disabled)* | Crop rectangle as `x0,y0,x1,y1` applied before OCR |
+| `--ocr-match-regex` | `OCR_MATCH_REGEX` | `^000\d+$` | Regex to identify the meter reading from OCR text |
+| `--ocr-fix-regex` | `OCR_FIX_REGEX` | *(disabled)* | Regex substitution as `pattern=replacement` applied before matching (e.g. `^300=000`) |
 | `--mqtt-broker` | `MQTT_BROKER` | *(disabled)* | MQTT broker URL, e.g. `tcp://192.168.1.100:1883` |
 | `--mqtt-user` | `MQTT_USER` | | MQTT username |
 | `--mqtt-password` | `MQTT_PASSWORD` | | MQTT password |
@@ -152,7 +154,7 @@ When `--storage-path` is set, each successful reading stores:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/ocr?bat_level=85&bat_voltage=4200` | `POST` | Submit a JPEG/PNG image as the request body. Returns JSON with OCR results. |
+| `/ocr?bat_level=85&bat_voltage=4200` | `POST` | Submit a JPEG/PNG image as the request body. Returns `202 Accepted` immediately; OCR runs in the background. |
 | `/health` | `GET` | Returns `200 OK`. |
 | `/metrics` | `GET` | Prometheus metrics. |
 
@@ -201,6 +203,7 @@ curl -X POST "http://localhost:8080/ocr?bat_level=85&bat_voltage=4200" \
 ### Build from source
 
 ```bash
+go test -race -v ./...
 go build -o esp32-meter-reader .
 
 # Requires Python 3.13+ with paddlepaddle==3.2.2 and paddleocr installed

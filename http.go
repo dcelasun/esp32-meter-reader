@@ -38,8 +38,6 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	log.Printf("OCR request received: image_bytes=%d bat_level=%d bat_voltage=%d", len(imageData), batLevel, batVoltage)
-
 	if len(imageData) == 0 {
 		http.Error(w, "empty body", http.StatusBadRequest)
 		return
@@ -47,7 +45,6 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 
 	// Respond immediately so the ESP32 can go back to sleep.
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("ok"))
 
 	// Process OCR in the background.
 	go processOCR(imageData, batLevel, batVoltage)
@@ -95,7 +92,7 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		return
 	}
 
-	reading := extractReading(ocrOut.Texts)
+	reading := extractReading(ocrOut.Texts, ocrMatchRe, ocrFix)
 
 	if reading != "" {
 		if val, err := strconv.ParseFloat(reading, 64); err == nil {
