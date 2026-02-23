@@ -105,7 +105,6 @@ func parseOCRFixRegex(s string) *ocrFixRule {
 }
 
 func extractReading(texts []string, matchRe *regexp.Regexp, fixRule *ocrFixRule) string {
-	// First pass: apply fix rule if set, then match.
 	for _, t := range texts {
 		t = strings.TrimSpace(t)
 		if fixRule != nil {
@@ -115,19 +114,7 @@ func extractReading(texts []string, matchRe *regexp.Regexp, fixRule *ocrFixRule)
 			return t
 		}
 	}
-	// Fallback: longest all-digit string.
-	digitsOnly := regexp.MustCompile(`^\d+$`)
-	best := ""
-	for _, t := range texts {
-		t = strings.TrimSpace(t)
-		if fixRule != nil {
-			t = fixRule.Pattern.ReplaceAllString(t, fixRule.Replacement)
-		}
-		if digitsOnly.MatchString(t) && len(t) > len(best) {
-			best = t
-		}
-	}
-	return best
+	return ""
 }
 
 func runOCR(imagePath string) (*ocrOutput, error) {

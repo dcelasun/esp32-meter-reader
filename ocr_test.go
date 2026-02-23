@@ -34,12 +34,6 @@ func TestExtractReading(t *testing.T) {
 			want:    "000354225",
 		},
 		{
-			name:    "fallback to longest digit string when no match",
-			texts:   []string{"12", "12345", "abc"},
-			matchRe: defaultMatchRe,
-			want:    "12345",
-		},
-		{
 			name:    "no digits at all returns empty",
 			texts:   []string{"abc", "def"},
 			matchRe: defaultMatchRe,
