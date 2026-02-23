@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.1...v0.2.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* Remove longest digit fallback for OCR ([bf9c9fc](https://github.com/dcelasun/esp32-meter-reader/commit/bf9c9fc181c26f2d74e54609cf5fd46c3b7893e1))
+
 ## [0.2.1](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.0...v0.2.1) (2026-02-22)
 
 
