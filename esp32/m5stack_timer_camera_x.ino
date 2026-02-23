@@ -118,8 +118,8 @@ WiFiClient connectToWiFi() {
 }
 
 bool sendImage(WiFiClient wifi) {
-    unit_flash_set_brightness(1);
-    delay(100);
+    unit_flash_set_brightness(9);
+    delay(300);
     if (!TimerCAM.Camera.get()) {
         unit_flash_set_brightness(0);
         Serial.println("Could not get camera");
