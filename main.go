@@ -19,7 +19,7 @@ var (
 	storagePath string
 	cropRect    *cropConfig
 	ocrMatchRe  *regexp.Regexp
-	ocrFix      *ocrFixRule
+	ocrFixRules []ocrFixRule
 
 	mqttBroker             string
 	mqttUser               string
@@ -72,7 +72,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:    "ocr-fix-regex",
-				Usage:   "Regex substitution applied to OCR text before matching, as pattern=replacement (e.g. ^300=000)",
+				Usage:   "Comma-separated list of regex substitutions applied to OCR text before matching, each as pattern=replacement (e.g. ^O=0,^030=000)",
 				Sources: cli.EnvVars("OCR_FIX_REGEX"),
 			},
 			&cli.StringFlag{
@@ -136,7 +136,7 @@ func run(_ context.Context, cmd *cli.Command) error {
 	storagePath = cmd.String("storage-path")
 	cropRect = parseCropRect(cmd.String("crop"))
 	ocrMatchRe = regexp.MustCompile(cmd.String("ocr-match-regex"))
-	ocrFix = parseOCRFixRegex(cmd.String("ocr-fix-regex"))
+	ocrFixRules = parseOCRFixRules(cmd.String("ocr-fix-regex"))
 
 	mqttBroker = cmd.String("mqtt-broker")
 	mqttUser = cmd.String("mqtt-user")

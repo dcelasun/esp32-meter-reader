@@ -100,7 +100,7 @@ Open [`esp32/m5stack_timer_camera_x.ino`](esp32/m5stack_timer_camera_x.ino) and 
 #define SLEEP_INTERVAL_SECS 14400    // Seconds between readings (14400 = 4 hours)
 ```
 
-The FlashLight brightness is set to mode `1` (100% brightness, 220ms duration) in `sendImage()`. See the brightness table in the sketch for other modes. If your meter is well-lit, you can set it to `0` to disable the flash entirely.
+The FlashLight brightness is set to mode `9` (100% brightness, 1.3s duration) in `sendImage()`. See the brightness table in the sketch for other modes. If your meter is well-lit, you can set it to `0` to disable the flash entirely.
 
 ### Upload
 
@@ -122,7 +122,7 @@ All options can be set via CLI flags or environment variables. Flags take preced
 | `--storage-path` | `STORAGE_PATH` | *(disabled)* | Directory to store images and `readings.csv` |
 | `--crop` | `CROP` | *(disabled)* | Crop rectangle as `x0,y0,x1,y1` applied before OCR |
 | `--ocr-match-regex` | `OCR_MATCH_REGEX` | `^000\d+$` | Regex to identify the meter reading from OCR text |
-| `--ocr-fix-regex` | `OCR_FIX_REGEX` | *(disabled)* | Regex substitution as `pattern=replacement` applied before matching (e.g. `^300=000`) |
+| `--ocr-fix-regex` | `OCR_FIX_REGEX` | *(disabled)* | Comma-separated list of regex substitutions as `pattern=replacement` applied in order before matching (e.g. `^O=0,^030=000`) |
 | `--mqtt-broker` | `MQTT_BROKER` | *(disabled)* | MQTT broker URL, e.g. `tcp://192.168.1.100:1883` |
 | `--mqtt-user` | `MQTT_USER` | | MQTT username |
 | `--mqtt-password` | `MQTT_PASSWORD` | | MQTT password |
@@ -157,16 +157,6 @@ When `--storage-path` is set, each successful reading stores:
 | `/ocr?bat_level=85&bat_voltage=4200` | `POST` | Submit a JPEG/PNG image as the request body. Returns `202 Accepted` immediately; OCR runs in the background. |
 | `/health` | `GET` | Returns `200 OK`. |
 | `/metrics` | `GET` | Prometheus metrics. |
-
-**POST /ocr response:**
-
-```json
-{
-  "raw_texts": ["SEnSUS", "CEM170102", "000354225", "640"],
-  "scores": [0.82, 0.97, 0.99, 0.98],
-  "reading": "000354225"
-}
-```
 
 **Prometheus metrics:**
 

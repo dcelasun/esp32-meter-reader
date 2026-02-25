@@ -86,35 +86,58 @@ type ocrFixRule struct {
 	Replacement string
 }
 
-func parseOCRFixRegex(s string) *ocrFixRule {
+func parseOCRFixRules(s string) []ocrFixRule {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return nil
 	}
-	idx := strings.Index(s, "=")
-	if idx < 0 {
-		log.Fatalf("ocr-fix-regex must be pattern=replacement, got: %q", s)
+	parts := strings.Split(s, ",")
+	rules := make([]ocrFixRule, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		idx := strings.Index(part, "=")
+		if idx < 0 {
+			log.Fatalf("ocr-fix-regex: each rule must be pattern=replacement, got: %q", part)
+		}
+		pattern := part[:idx]
+		replacement := part[idx+1:]
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			log.Fatalf("ocr-fix-regex: invalid pattern %q: %v", pattern, err)
+		}
+		rules = append(rules, ocrFixRule{Pattern: re, Replacement: replacement})
 	}
-	pattern := s[:idx]
-	replacement := s[idx+1:]
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		log.Fatalf("ocr-fix-regex: invalid pattern %q: %v", pattern, err)
-	}
-	return &ocrFixRule{Pattern: re, Replacement: replacement}
+	return rules
 }
 
-func extractReading(texts []string, matchRe *regexp.Regexp, fixRule *ocrFixRule) string {
+func applyFixRules(s string, rules []ocrFixRule) string {
+	for _, r := range rules {
+		s = r.Pattern.ReplaceAllString(s, r.Replacement)
+	}
+	return s
+}
+
+func extractReading(texts []string, matchRe *regexp.Regexp, fixRules []ocrFixRule) string {
+	// First pass: apply fix rules, then match.
 	for _, t := range texts {
-		t = strings.TrimSpace(t)
-		if fixRule != nil {
-			t = fixRule.Pattern.ReplaceAllString(t, fixRule.Replacement)
-		}
+		t = applyFixRules(strings.TrimSpace(t), fixRules)
 		if matchRe.MatchString(t) {
 			return t
 		}
 	}
-	return ""
+	// Fallback: longest all-digit string.
+	digitsOnly := regexp.MustCompile(`^\d+$`)
+	best := ""
+	for _, t := range texts {
+		t = applyFixRules(strings.TrimSpace(t), fixRules)
+		if digitsOnly.MatchString(t) && len(t) > len(best) {
+			best = t
+		}
+	}
+	return best
 }
 
 func runOCR(imagePath string) (*ocrOutput, error) {
