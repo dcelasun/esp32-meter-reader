@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.2...v0.3.0) (2026-02-25)
+
+
+### Features
+
+* Support multiple replacements in ocr-fix-regex flag ([5356867](https://github.com/dcelasun/esp32-meter-reader/commit/5356867be1c7825d3216d454873d43186ab38c31))
+
+
+### Bug Fixes
+
+* **esp32:** Better flash duration ([6266bbc](https://github.com/dcelasun/esp32-meter-reader/commit/6266bbc8a25a418f143724a44b8f9066ef0a435e))
+
 ## [0.2.2](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.1...v0.2.2) (2026-02-23)
 
 
