@@ -3,11 +3,18 @@ package main
 import (
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
+)
+
+var (
+	lastReadingMu sync.Mutex
+	lastReading   = math.NaN()
 )
 
 func handleOCR(w http.ResponseWriter, r *http.Request) {
@@ -96,22 +103,41 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 
 	reading := extractReading(ocrOut.Texts, ocrMatchRe, ocrFixRules)
 
-	if reading != "" {
-		if val, err := strconv.ParseFloat(reading, 64); err == nil {
-			metricMeterReading.Set(val)
-		}
-	}
-
-	// Append reading to CSV now that we have a result.
+	// Append reading to CSV unconditionally so discarded values are still on disk.
 	storeReading(imagePath, reading)
 
-	if mqttBroker != "" && reading != "" {
-		if val, err := strconv.ParseFloat(reading, 64); err == nil {
-			publishReading(val/meterDivisor, batLevel, batVoltage)
-		}
+	if reading == "" {
+		log.Printf("OCR completed in %s: no reading found, texts=%v", elapsed, ocrOut.Texts)
+		return
 	}
 
-	log.Printf("OCR completed in %s: reading=%s texts=%v", elapsed, reading, ocrOut.Texts)
+	val, err := strconv.ParseFloat(reading, 64)
+	if err != nil {
+		log.Printf("OCR completed in %s: invalid reading %q, texts=%v", elapsed, reading, ocrOut.Texts)
+		return
+	}
+
+	divided := val / meterDivisor
+
+	if ocrIncrOnly {
+		lastReadingMu.Lock()
+		prev := lastReading
+		if !math.IsNaN(prev) && divided < prev {
+			lastReadingMu.Unlock()
+			log.Printf("OCR incr-only: discarding reading %.3f < previous %.3f", divided, prev)
+			return
+		}
+		lastReading = divided
+		lastReadingMu.Unlock()
+	}
+
+	metricMeterReading.Set(val)
+
+	if mqttBroker != "" {
+		publishReading(divided, batLevel, batVoltage)
+	}
+
+	log.Printf("OCR completed in %s: reading=%s (%.3f m³) texts=%v", elapsed, reading, divided, ocrOut.Texts)
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {

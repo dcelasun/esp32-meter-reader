@@ -29,6 +29,7 @@ var (
 	mqttDeviceManufacturer string
 	mqttDeviceModel        string
 	meterDivisor           float64
+	ocrIncrOnly            bool
 )
 
 func main() {
@@ -120,6 +121,11 @@ func main() {
 				Usage:   "Divisor to convert the raw OCR reading to m³ (e.g. 000354225 / 1000 = 354.225)",
 				Sources: cli.EnvVars("METER_DIVISOR"),
 			},
+			&cli.BoolFlag{
+				Name:    "ocr-incr-only",
+				Usage:   "Only publish readings that are >= the previous reading (after dividing by meter-divisor), discarding likely OCR errors",
+				Sources: cli.EnvVars("OCR_INCR_ONLY"),
+			},
 		},
 		Action: run,
 	}
@@ -146,6 +152,7 @@ func run(_ context.Context, cmd *cli.Command) error {
 	mqttDeviceManufacturer = cmd.String("mqtt-device-manufacturer")
 	mqttDeviceModel = cmd.String("mqtt-device-model")
 	meterDivisor = cmd.Float("meter-divisor")
+	ocrIncrOnly = cmd.Bool("ocr-incr-only")
 
 	if mqttBroker != "" {
 		initMQTT()
