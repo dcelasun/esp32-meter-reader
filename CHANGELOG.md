@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.3.0...v0.4.0) (2026-02-26)
+
+
+### Features
+
+* Add ocr-incr-only flag ([8a77d98](https://github.com/dcelasun/esp32-meter-reader/commit/8a77d98c6fb4df0f8d5433412cf3beea5ae03112))
+
+
+### Bug Fixes
+
+* Restore OCR endpoint log ([cf58250](https://github.com/dcelasun/esp32-meter-reader/commit/cf582509605e0ee5b80884d848fd3b2130ec9362))
+
 ## [0.3.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.2.2...v0.3.0) (2026-02-25)
 
 
