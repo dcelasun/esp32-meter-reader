@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.4.0...v0.5.0) (2026-03-02)
+
+
+### Features
+
+* Add masking support for improved OCR ([47546ff](https://github.com/dcelasun/esp32-meter-reader/commit/47546ffc612f5207ab1cda652d4220aed99499ec))
+
 ## [0.4.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.3.0...v0.4.0) (2026-02-26)
 
 
