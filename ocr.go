@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"image/jpeg"
 	"log"
 	"os/exec"
@@ -73,6 +76,122 @@ func cropImage(data []byte, c *cropConfig) ([]byte, error) {
 		return nil, fmt.Errorf("encode cropped image: %w", err)
 	}
 
+	return buf.Bytes(), nil
+}
+
+type maskRegion struct {
+	Rect  image.Rectangle
+	Color color.RGBA
+}
+
+func parseMaskRegions(regions, colors string) []maskRegion {
+	regions = strings.TrimSpace(regions)
+	if regions == "" {
+		return nil
+	}
+
+	coords := strings.Split(regions, ",")
+	if len(coords)%4 != 0 {
+		log.Fatalf("ocr-mask-regions: must have groups of 4 coordinates (x1,y1,x2,y2), got %d values", len(coords))
+	}
+
+	vals := make([]int, len(coords))
+	for i, c := range coords {
+		v, err := strconv.Atoi(strings.TrimSpace(c))
+		if err != nil {
+			log.Fatalf("ocr-mask-regions: invalid integer %q: %v", c, err)
+		}
+		vals[i] = v
+	}
+
+	numRects := len(vals) / 4
+	rectColors := parseMaskColors(colors, numRects)
+
+	masks := make([]maskRegion, numRects)
+	for i := 0; i < numRects; i++ {
+		x0, y0 := vals[i*4], vals[i*4+1]
+		x1, y1 := vals[i*4+2], vals[i*4+3]
+		if x0 >= x1 || y0 >= y1 {
+			log.Fatalf("ocr-mask-regions: invalid rectangle #%d (x0,y0 must be < x1,y1): %d,%d,%d,%d", i+1, x0, y0, x1, y1)
+		}
+		masks[i] = maskRegion{
+			Rect:  image.Rect(x0, y0, x1, y1),
+			Color: rectColors[i],
+		}
+	}
+	return masks
+}
+
+func parseMaskColors(s string, numRects int) []color.RGBA {
+	s = strings.TrimSpace(s)
+	defaultColor := color.RGBA{0, 0, 0, 255}
+
+	if s == "" {
+		colors := make([]color.RGBA, numRects)
+		for i := range colors {
+			colors[i] = defaultColor
+		}
+		return colors
+	}
+
+	parts := strings.Split(s, ",")
+	parsed := make([]color.RGBA, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		parsed = append(parsed, parseHexColor(p))
+	}
+
+	if len(parsed) == 1 {
+		colors := make([]color.RGBA, numRects)
+		for i := range colors {
+			colors[i] = parsed[0]
+		}
+		return colors
+	}
+
+	if len(parsed) != numRects {
+		log.Fatalf("ocr-mask-colors: must specify 1 color or exactly %d (one per rectangle), got %d", numRects, len(parsed))
+	}
+	return parsed
+}
+
+func parseHexColor(s string) color.RGBA {
+	s = strings.TrimPrefix(s, "#")
+	if len(s) != 6 {
+		log.Fatalf("ocr-mask-colors: invalid hex color %q (must be 6 hex digits like 0099CC)", s)
+	}
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		log.Fatalf("ocr-mask-colors: invalid hex color %q: %v", s, err)
+	}
+	return color.RGBA{R: b[0], G: b[1], B: b[2], A: 255}
+}
+
+func maskImage(data []byte, masks []maskRegion) ([]byte, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("decode image: %w", err)
+	}
+
+	bounds := img.Bounds()
+	dst := image.NewRGBA(bounds)
+	draw.Draw(dst, bounds, img, bounds.Min, draw.Src)
+
+	for _, m := range masks {
+		r := m.Rect.Intersect(bounds)
+		if r.Empty() {
+			continue
+		}
+		draw.Draw(dst, r, &image.Uniform{m.Color}, image.Point{}, draw.Src)
+	}
+
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, dst, &jpeg.Options{Quality: 95}); err != nil {
+		return nil, fmt.Errorf("encode masked image: %w", err)
+	}
 	return buf.Bytes(), nil
 }
 

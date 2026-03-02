@@ -60,20 +60,30 @@ func handleOCR(w http.ResponseWriter, r *http.Request) {
 }
 
 func processOCR(imageData []byte, batLevel, batVoltage int) {
-	var croppedData []byte
+	var cropped, masked bool
 	ocrData := imageData
 	if cropRect != nil {
-		cropped, err := cropImage(imageData, cropRect)
+		data, err := cropImage(imageData, cropRect)
 		if err != nil {
 			log.Printf("crop error: %v, using original image", err)
 		} else {
-			croppedData = cropped
-			ocrData = cropped
+			ocrData = data
+			cropped = true
+		}
+	}
+
+	if len(ocrMasks) > 0 {
+		data, err := maskImage(ocrData, ocrMasks)
+		if err != nil {
+			log.Printf("mask error: %v, using unmasked image", err)
+		} else {
+			ocrData = data
+			masked = true
 		}
 	}
 
 	// Store images to disk before OCR so we have them even if OCR fails.
-	imagePath := storeImages(imageData, croppedData)
+	imagePath := storeImages(imageData, ocrData, cropped, masked)
 
 	tmpDir, err := os.MkdirTemp("", "ocr-")
 	if err != nil {

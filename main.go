@@ -20,6 +20,7 @@ var (
 	cropRect    *cropConfig
 	ocrMatchRe  *regexp.Regexp
 	ocrFixRules []ocrFixRule
+	ocrMasks    []maskRegion
 
 	mqttBroker             string
 	mqttUser               string
@@ -75,6 +76,16 @@ func main() {
 				Name:    "ocr-fix-regex",
 				Usage:   "Comma-separated list of regex substitutions applied to OCR text before matching, each as pattern=replacement (e.g. ^O=0,^030=000)",
 				Sources: cli.EnvVars("OCR_FIX_REGEX"),
+			},
+			&cli.StringFlag{
+				Name:    "ocr-mask-regions",
+				Usage:   "Comma-separated rectangle coordinates to mask before OCR, as x1,y1,x2,y2[,x3,y3,x4,y4,...] (applied after crop)",
+				Sources: cli.EnvVars("OCR_MASK_REGIONS"),
+			},
+			&cli.StringFlag{
+				Name:    "ocr-mask-colors",
+				Usage:   "Comma-separated hex colors for mask regions (e.g. 0099CC). One color applies to all regions; otherwise must match the number of regions",
+				Sources: cli.EnvVars("OCR_MASK_COLORS"),
 			},
 			&cli.StringFlag{
 				Name:    "mqtt-broker",
@@ -143,6 +154,7 @@ func run(_ context.Context, cmd *cli.Command) error {
 	cropRect = parseCropRect(cmd.String("crop"))
 	ocrMatchRe = regexp.MustCompile(cmd.String("ocr-match-regex"))
 	ocrFixRules = parseOCRFixRules(cmd.String("ocr-fix-regex"))
+	ocrMasks = parseMaskRegions(cmd.String("ocr-mask-regions"), cmd.String("ocr-mask-colors"))
 
 	mqttBroker = cmd.String("mqtt-broker")
 	mqttUser = cmd.String("mqtt-user")

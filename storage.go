@@ -29,9 +29,10 @@ func appendCSV(csvPath, imagePath, reading string) error {
 	return w.Error()
 }
 
-// storeImages saves the original image (and cropped image if available) to disk.
+// storeImages saves the original image and, if processing was applied, the
+// processed image (cropped, masked, or both) to disk.
 // Returns the relative path of the original image, or empty string if storage is disabled.
-func storeImages(imageData, croppedData []byte) string {
+func storeImages(imageData, processedData []byte, cropped, masked bool) string {
 	if storagePath == "" {
 		return ""
 	}
@@ -56,10 +57,19 @@ func storeImages(imageData, croppedData []byte) string {
 		return ""
 	}
 
-	if croppedData != nil {
-		croppedPath := filepath.Join(storagePath, relDir, baseName+"_cropped.jpg")
-		if err := os.WriteFile(croppedPath, croppedData, 0644); err != nil {
-			log.Printf("storage write cropped error: %v", err)
+	if cropped || masked {
+		var suffix string
+		switch {
+		case cropped && masked:
+			suffix = "_cropped_masked"
+		case cropped:
+			suffix = "_cropped"
+		case masked:
+			suffix = "_masked"
+		}
+		procPath := filepath.Join(storagePath, relDir, baseName+suffix+".jpg")
+		if err := os.WriteFile(procPath, processedData, 0644); err != nil {
+			log.Printf("storage write %s error: %v", suffix[1:], err)
 		}
 	}
 
