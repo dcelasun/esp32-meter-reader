@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.5.0...v0.6.0) (2026-04-08)
+
+
+### Features
+
+* Support merging OCR'ed texts ([d9e9bf5](https://github.com/dcelasun/esp32-meter-reader/commit/d9e9bf53472b74b8dcbd380bd714d24942713af2))
+
 ## [0.5.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.4.0...v0.5.0) (2026-03-02)
 
 
