@@ -239,7 +239,14 @@ func applyFixRules(s string, rules []ocrFixRule) string {
 	return s
 }
 
-func extractReading(texts []string, matchRe *regexp.Regexp, fixRules []ocrFixRule) string {
+func extractReading(texts []string, matchRe *regexp.Regexp, fixRules []ocrFixRule, mergeTexts bool) string {
+	if mergeTexts {
+		var merged strings.Builder
+		for _, t := range texts {
+			merged.WriteString(strings.TrimSpace(t))
+		}
+		texts = []string{merged.String()}
+	}
 	// First pass: apply fix rules, then match.
 	for _, t := range texts {
 		t = applyFixRules(strings.TrimSpace(t), fixRules)

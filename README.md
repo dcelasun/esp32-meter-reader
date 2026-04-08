@@ -123,6 +123,7 @@ All options can be set via CLI flags or environment variables. Flags take preced
 | `--crop` | `CROP` | *(disabled)* | Crop rectangle as `x0,y0,x1,y1` applied before OCR |
 | `--ocr-match-regex` | `OCR_MATCH_REGEX` | `^000\d+$` | Regex to identify the meter reading from OCR text |
 | `--ocr-fix-regex` | `OCR_FIX_REGEX` | *(disabled)* | Comma-separated list of regex substitutions as `pattern=replacement` applied in order before matching (e.g. `^O=0,^030=000`) |
+| `--ocr-merge-texts` | `OCR_MERGE_TEXTS` | `false` | Concatenate all OCR text results into a single string before applying fix/match regexes (useful when readings are split across multiple detections, e.g. `["00036", "128"]` → `"00036128"`) |
 | `--ocr-mask-regions` | `OCR_MASK_REGIONS` | *(disabled)* | Comma-separated rectangle coordinates to mask before OCR, as `x1,y1,x2,y2[,x3,y3,x4,y4,...]` (applied after crop) |
 | `--ocr-mask-colors` | `OCR_MASK_COLORS` | `000000` | Comma-separated hex colors for mask regions. One color applies to all; otherwise must match the number of regions |
 | `--mqtt-broker` | `MQTT_BROKER` | *(disabled)* | MQTT broker URL, e.g. `tcp://192.168.1.100:1883` |

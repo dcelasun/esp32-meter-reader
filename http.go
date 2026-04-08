@@ -111,7 +111,7 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		return
 	}
 
-	reading := extractReading(ocrOut.Texts, ocrMatchRe, ocrFixRules)
+	reading := extractReading(ocrOut.Texts, ocrMatchRe, ocrFixRules, ocrMergeTexts)
 
 	// Append reading to CSV unconditionally so discarded values are still on disk.
 	storeReading(imagePath, reading)

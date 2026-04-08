@@ -31,6 +31,7 @@ var (
 	mqttDeviceModel        string
 	meterDivisor           float64
 	ocrIncrOnly            bool
+	ocrMergeTexts          bool
 )
 
 func main() {
@@ -76,6 +77,11 @@ func main() {
 				Name:    "ocr-fix-regex",
 				Usage:   "Comma-separated list of regex substitutions applied to OCR text before matching, each as pattern=replacement (e.g. ^O=0,^030=000)",
 				Sources: cli.EnvVars("OCR_FIX_REGEX"),
+			},
+			&cli.BoolFlag{
+				Name:    "ocr-merge-texts",
+				Usage:   "Concatenate all OCR text results into a single string before applying fix/match regexes (useful when readings are split across multiple detections)",
+				Sources: cli.EnvVars("OCR_MERGE_TEXTS"),
 			},
 			&cli.StringFlag{
 				Name:    "ocr-mask-regions",
@@ -165,6 +171,7 @@ func run(_ context.Context, cmd *cli.Command) error {
 	mqttDeviceModel = cmd.String("mqtt-device-model")
 	meterDivisor = cmd.Float("meter-divisor")
 	ocrIncrOnly = cmd.Bool("ocr-incr-only")
+	ocrMergeTexts = cmd.Bool("ocr-merge-texts")
 
 	if mqttBroker != "" {
 		initMQTT()

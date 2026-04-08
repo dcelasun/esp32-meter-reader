@@ -127,9 +127,71 @@ func TestExtractReading(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractReading(tt.texts, tt.matchRe, tt.fixRules)
+			got := extractReading(tt.texts, tt.matchRe, tt.fixRules, false)
 			if got != tt.want {
 				t.Errorf("extractReading() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractReadingMerge(t *testing.T) {
+	defaultMatchRe := regexp.MustCompile(`^000\d+$`)
+
+	tests := []struct {
+		name     string
+		texts    []string
+		matchRe  *regexp.Regexp
+		fixRules []ocrFixRule
+		want     string
+	}{
+		{
+			name:    "merge splits into single reading",
+			texts:   []string{"00036", "128"},
+			matchRe: regexp.MustCompile(`^\d+$`),
+			want:    "00036128",
+		},
+		{
+			name:    "merge with match regex",
+			texts:   []string{"000", "354225"},
+			matchRe: defaultMatchRe,
+			want:    "000354225",
+		},
+		{
+			name:    "merge with fix rules",
+			texts:   []string{"O30", "354225"},
+			matchRe: defaultMatchRe,
+			fixRules: []ocrFixRule{
+				{Pattern: regexp.MustCompile(`^O`), Replacement: "0"},
+				{Pattern: regexp.MustCompile(`^030`), Replacement: "000"},
+			},
+			want: "000354225",
+		},
+		{
+			name:    "merge single element unchanged",
+			texts:   []string{"000354225"},
+			matchRe: defaultMatchRe,
+			want:    "000354225",
+		},
+		{
+			name:    "merge trims whitespace from each part",
+			texts:   []string{" 000 ", " 354225 "},
+			matchRe: defaultMatchRe,
+			want:    "000354225",
+		},
+		{
+			name:    "merge empty input returns empty",
+			texts:   []string{},
+			matchRe: defaultMatchRe,
+			want:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractReading(tt.texts, tt.matchRe, tt.fixRules, true)
+			if got != tt.want {
+				t.Errorf("extractReading(merge=true) = %q, want %q", got, tt.want)
 			}
 		})
 	}
