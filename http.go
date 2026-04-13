@@ -129,13 +129,20 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 
 	divided := val / meterDivisor
 
-	if ocrIncrOnly {
+	if ocrIncrOnly || ocrMaxIncr > 0 {
 		lastReadingMu.Lock()
 		prev := lastReading
-		if !math.IsNaN(prev) && divided < prev {
-			lastReadingMu.Unlock()
-			log.Printf("OCR incr-only: discarding reading %.3f < previous %.3f", divided, prev)
-			return
+		if !math.IsNaN(prev) {
+			if ocrIncrOnly && divided < prev {
+				lastReadingMu.Unlock()
+				log.Printf("OCR incr-only: discarding reading %.3f < previous %.3f", divided, prev)
+				return
+			}
+			if ocrMaxIncr > 0 && divided-prev > ocrMaxIncr {
+				lastReadingMu.Unlock()
+				log.Printf("OCR max-incr: discarding reading %.3f, increase %.3f > max %.3f (previous %.3f)", divided, divided-prev, ocrMaxIncr, prev)
+				return
+			}
 		}
 		lastReading = divided
 		lastReadingMu.Unlock()

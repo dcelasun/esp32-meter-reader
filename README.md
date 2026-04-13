@@ -135,6 +135,7 @@ All options can be set via CLI flags or environment variables. Flags take preced
 | `--mqtt-device-model` | `MQTT_DEVICE_MODEL` | `Generic` | Model shown in Home Assistant |
 | `--meter-divisor` | `METER_DIVISOR` | `1000` | Divisor to convert raw reading to m³ (e.g. `000354225` / `1000` = `354.225`) |
 | `--ocr-incr-only` | `OCR_INCR_ONLY` | `false` | Only publish readings that are ≥ the previous value (after dividing by `meter-divisor`), discarding likely OCR errors |
+| `--ocr-max-incr` | `OCR_MAX_INCR` | `0` | Maximum allowed increase between consecutive readings (after `meter-divisor`); larger jumps are discarded as OCR errors (`0` = disabled) |
 
 ### MQTT / Home Assistant
 

@@ -31,6 +31,7 @@ var (
 	mqttDeviceModel        string
 	meterDivisor           float64
 	ocrIncrOnly            bool
+	ocrMaxIncr             float64
 	ocrMergeTexts          bool
 )
 
@@ -143,6 +144,11 @@ func main() {
 				Usage:   "Only publish readings that are >= the previous reading (after dividing by meter-divisor), discarding likely OCR errors",
 				Sources: cli.EnvVars("OCR_INCR_ONLY"),
 			},
+			&cli.FloatFlag{
+				Name:    "ocr-max-incr",
+				Usage:   "Maximum allowed increase between consecutive readings (after dividing by meter-divisor); larger jumps are discarded as OCR errors (0 = disabled)",
+				Sources: cli.EnvVars("OCR_MAX_INCR"),
+			},
 		},
 		Action: run,
 	}
@@ -171,6 +177,7 @@ func run(_ context.Context, cmd *cli.Command) error {
 	mqttDeviceModel = cmd.String("mqtt-device-model")
 	meterDivisor = cmd.Float("meter-divisor")
 	ocrIncrOnly = cmd.Bool("ocr-incr-only")
+	ocrMaxIncr = cmd.Float("ocr-max-incr")
 	ocrMergeTexts = cmd.Bool("ocr-merge-texts")
 
 	if mqttBroker != "" {
