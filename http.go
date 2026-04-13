@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -132,17 +133,10 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 	if ocrIncrOnly || ocrMaxIncr > 0 {
 		lastReadingMu.Lock()
 		prev := lastReading
-		if !math.IsNaN(prev) {
-			if ocrIncrOnly && divided < prev {
-				lastReadingMu.Unlock()
-				log.Printf("OCR incr-only: discarding reading %.3f < previous %.3f", divided, prev)
-				return
-			}
-			if ocrMaxIncr > 0 && divided-prev > ocrMaxIncr {
-				lastReadingMu.Unlock()
-				log.Printf("OCR max-incr: discarding reading %.3f, increase %.3f > max %.3f (previous %.3f)", divided, divided-prev, ocrMaxIncr, prev)
-				return
-			}
+		if reason := checkReadingFilter(divided, prev, ocrIncrOnly, ocrMaxIncr); reason != "" {
+			lastReadingMu.Unlock()
+			log.Printf("%s", reason)
+			return
 		}
 		lastReading = divided
 		lastReadingMu.Unlock()
@@ -155,6 +149,21 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 	}
 
 	log.Printf("OCR completed in %s: reading=%s (%.3f m³) texts=%v", elapsed, reading, divided, ocrOut.Texts)
+}
+
+// checkReadingFilter returns a non-empty reason string if the reading should
+// be discarded, or "" if it should be accepted. prev may be NaN for the first reading.
+func checkReadingFilter(divided, prev float64, incrOnly bool, maxIncr float64) string {
+	if math.IsNaN(prev) {
+		return ""
+	}
+	if incrOnly && divided < prev {
+		return fmt.Sprintf("OCR incr-only: discarding reading %.3f < previous %.3f", divided, prev)
+	}
+	if maxIncr > 0 && divided-prev > maxIncr {
+		return fmt.Sprintf("OCR max-incr: discarding reading %.3f, increase %.3f > max %.3f (previous %.3f)", divided, divided-prev, maxIncr, prev)
+	}
+	return ""
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
