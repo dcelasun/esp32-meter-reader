@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.6.0...v0.7.0) (2026-04-13)
+
+
+### Features
+
+* Add OCR_MAX_INCR flag ([3d7c0e4](https://github.com/dcelasun/esp32-meter-reader/commit/3d7c0e40e7542acd5aec5a8de09616bffdf140b4))
+
 ## [0.6.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.5.0...v0.6.0) (2026-04-08)
 
 
