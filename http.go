@@ -114,9 +114,6 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 
 	reading := extractReading(ocrOut.Texts, ocrMatchRe, ocrFixRules, ocrMergeTexts)
 
-	// Append reading to CSV unconditionally so discarded values are still on disk.
-	storeReading(imagePath, reading)
-
 	if reading == "" {
 		log.Printf("OCR completed in %s: no reading found, texts=%v", elapsed, ocrOut.Texts)
 		return
@@ -124,6 +121,7 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 
 	val, err := strconv.ParseFloat(reading, 64)
 	if err != nil {
+		storeReading(imagePath, reading, false)
 		log.Printf("OCR completed in %s: invalid reading %q, texts=%v", elapsed, reading, ocrOut.Texts)
 		return
 	}
@@ -135,6 +133,7 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		prev := lastReading
 		if reason := checkReadingFilter(divided, prev, ocrIncrOnly, ocrMaxIncr); reason != "" {
 			lastReadingMu.Unlock()
+			storeReading(imagePath, reading, false)
 			log.Printf("%s", reason)
 			return
 		}
@@ -142,6 +141,7 @@ func processOCR(imageData []byte, batLevel, batVoltage int) {
 		lastReadingMu.Unlock()
 	}
 
+	storeReading(imagePath, reading, true)
 	metricMeterReading.Set(val)
 
 	if mqttBroker != "" {

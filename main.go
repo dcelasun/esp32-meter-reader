@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -179,6 +180,14 @@ func run(_ context.Context, cmd *cli.Command) error {
 	ocrIncrOnly = cmd.Bool("ocr-incr-only")
 	ocrMaxIncr = cmd.Float("ocr-max-incr")
 	ocrMergeTexts = cmd.Bool("ocr-merge-texts")
+
+	if storagePath != "" && (ocrIncrOnly || ocrMaxIncr > 0) {
+		csvPath := filepath.Join(storagePath, "readings.csv")
+		if prev, ok := lastStoredReading(csvPath, meterDivisor); ok {
+			lastReading = prev
+			log.Printf("seeded last reading from CSV: %.3f m³", prev)
+		}
+	}
 
 	if mqttBroker != "" {
 		initMQTT()

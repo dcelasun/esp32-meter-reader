@@ -5,13 +5,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
 
 var csvMu sync.Mutex
 
-func appendCSV(csvPath, imagePath, reading string) error {
+func appendCSV(csvPath, imagePath, reading string, valid bool) error {
 	csvMu.Lock()
 	defer csvMu.Unlock()
 
@@ -21,8 +22,13 @@ func appendCSV(csvPath, imagePath, reading string) error {
 	}
 	defer f.Close()
 
+	validStr := "0"
+	if valid {
+		validStr = "1"
+	}
+
 	w := csv.NewWriter(f)
-	if err := w.Write([]string{imagePath, reading, time.Now().UTC().Format(time.RFC3339)}); err != nil {
+	if err := w.Write([]string{imagePath, reading, time.Now().UTC().Format(time.RFC3339), validStr}); err != nil {
 		return err
 	}
 	w.Flush()
@@ -77,13 +83,52 @@ func storeImages(imageData, processedData []byte, cropped, masked bool) string {
 }
 
 // storeReading appends a row to readings.csv.
-func storeReading(imagePath, reading string) {
+func storeReading(imagePath, reading string, valid bool) {
 	if storagePath == "" || imagePath == "" || reading == "" {
 		return
 	}
 
 	csvPath := filepath.Join(storagePath, "readings.csv")
-	if err := appendCSV(csvPath, imagePath, reading); err != nil {
+	if err := appendCSV(csvPath, imagePath, reading, valid); err != nil {
 		log.Printf("csv append error: %v", err)
 	}
+}
+
+// lastStoredReading reads the last valid reading from a readings.csv file.
+// For backwards compatibility, rows without a valid column (old 3-column format)
+// are assumed valid.
+func lastStoredReading(csvPath string, divisor float64) (float64, bool) {
+	f, err := os.Open(csvPath)
+	if err != nil {
+		return 0, false
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	r.FieldsPerRecord = -1
+
+	var lastVal float64
+	var found bool
+
+	for {
+		row, err := r.Read()
+		if err != nil {
+			break
+		}
+		if len(row) < 2 {
+			continue
+		}
+		// Column 3 (index 3) is the valid flag. If absent (old format), assume valid.
+		if len(row) >= 4 && row[3] == "0" {
+			continue
+		}
+		val, err := strconv.ParseFloat(row[1], 64)
+		if err != nil {
+			continue
+		}
+		lastVal = val / divisor
+		found = true
+	}
+
+	return lastVal, found
 }
