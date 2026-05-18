@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.7.0...v0.8.0) (2026-05-18)
+
+
+### Features
+
+* Read last value on start up, ignore decreases ([8d335a9](https://github.com/dcelasun/esp32-meter-reader/commit/8d335a927aa0a472b8f668ce13a065fb0f2fc89c))
+
 ## [0.7.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.6.0...v0.7.0) (2026-04-13)
 
 
