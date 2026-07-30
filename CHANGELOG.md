@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/dcelasun/esp32-meter-reader/compare/v0.9.0...v0.9.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* Pin all Paddle dependency versions ([46ae744](https://github.com/dcelasun/esp32-meter-reader/commit/46ae7447f2e7002fe33db2cdf3a1c15132a9ddd1))
+
 ## [0.9.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.8.0...v0.9.0) (2026-07-29)
 
 
