@@ -16,14 +16,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Create venv and install paddlepaddle + paddleocr
-# Pin paddlepaddle to 3.2.2 — later 3.x versions have a CPU inference bug:
+# Create venv and install paddlepaddle + paddleocr                    
+#                                                                                             
+# Pin paddlepaddle to 3.2.2 — later 3.x versions have a CPU inference bug:                    
 # https://github.com/PaddlePaddle/Paddle/issues/77340
-RUN python3 -m venv /app/venv \
+# Fixed by https://github.com/PaddlePaddle/Paddle/pull/77430, but unreleased as
+# of 3.2.2. Once a release carries that fix, all three pins below can move
+# together (validate a rebuild against the previous versions before shipping).
+#                                                                                             
+# paddleocr/paddlex are pinned too: 3.7.x drives paddlepaddle 3.2.2 down a
+# oneDNN kernel-selection path that writes "ReduceMeanCheckIfOneDNNSupport" to
+# stdout, corrupting the JSON ocr.py prints there. 3.7.x also emits the meter's
+# decimal separator, which OCR_MATCH_REGEX does not expect.                
+RUN python3 -m venv /app/venv \                                                               
     && /app/venv/bin/pip install --no-cache-dir \
-        paddlepaddle==3.2.2 \
-        -i https://www.paddlepaddle.org.cn/packages/stable/cpu/ \
-    && /app/venv/bin/pip install --no-cache-dir paddleocr
+        paddlepaddle==3.2.2 \                                                                 
+        -i https://www.paddlepaddle.org.cn/packages/stable/cpu/ \          
+    && /app/venv/bin/pip install --no-cache-dir paddleocr                                     
+    && /app/venv/bin/pip install --no-cache-dir \
+        paddleocr==3.5.0 \                                                                    
+        'paddlex[ocr-core]==3.5.2'       
 
 # Pre-download models by doing a dummy inference
 COPY ocr.py /app/ocr.py
