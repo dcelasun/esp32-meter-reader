@@ -20,6 +20,7 @@ The service extracts the reading and publishes it to Home Assistant via MQTT dis
 - [Hardware](#hardware)
 - [OCR Service](#ocr-service)
   - [Docker](#docker)
+  - [Portainer](#portainer)
   - [Kubernetes](#kubernetes)
 - [ESP32 Installation](#esp32-installation)
   - [Prerequisites](#prerequisites)
@@ -60,6 +61,68 @@ docker run -d -p 8080:8080 \
   -e MQTT_PASSWORD=secret \
   -e METER_DIVISOR=1000 \
   ghcr.io/dcelasun/esp32-meter-reader:latest
+```
+### Portainer
+
+If you use [Portainer](https://www.portainer.io/), the OCR service can be deployed as a **Stack** using Docker Compose.
+
+In Portainer, go to **Stacks → Add stack**, give the stack a name (for example `esp32-meter-reader`), and paste the following:
+
+```yaml
+services:
+  esp32-meter-reader:
+    image: ghcr.io/dcelasun/esp32-meter-reader:latest
+    container_name: esp32-meter-reader
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - meter-data:/data
+
+    environment:
+      STORAGE_PATH: /data
+
+      # MQTT
+      MQTT_BROKER: tcp://192.168.1.100:1883
+      MQTT_USER: homeassistant
+      MQTT_PASSWORD: secret
+
+      # Meter reading
+      METER_DIVISOR: "1000"
+
+volumes:
+  meter-data:
+```
+
+Change the following values to match your environment:
+
+| Variable        | Description                                             |
+| --------------- | ------------------------------------------------------- |
+| `MQTT_BROKER`   | MQTT broker URL, for example `tcp://192.168.1.100:1883` |
+| `MQTT_USER`     | MQTT username                                           |
+| `MQTT_PASSWORD` | MQTT password                                           |
+| `METER_DIVISOR` | Divisor used to convert the raw meter reading to m³     |
+
+The service will be available on port **8080** of the Docker host:
+
+```text
+http://<docker-host-ip>:8080
+```
+
+For example:
+
+```text
+http://192.168.1.50:8080
+```
+
+The Docker volume `meter-data` is used to persist captured images and `readings.csv` across container restarts and updates.
+
+If the MQTT broker is running in another Docker container on the same Docker network, you can use its Docker service/container name instead of an IP address. For example:
+
+```yaml
+MQTT_BROKER: tcp://mosquitto:1883
 ```
 
 ### Kubernetes
