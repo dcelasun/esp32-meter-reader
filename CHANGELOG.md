@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/dcelasun/esp32-meter-reader/compare/v0.9.1...v0.10.0) (2026-09-18)
+
+
+### Features
+
+* AI-Thinker ESP32-CAM support ([fb699c9](https://github.com/dcelasun/esp32-meter-reader/commit/fb699c913abc582a8769e9b15e4c0c0ff30ca892)), closes [#16](https://github.com/dcelasun/esp32-meter-reader/issues/16)
+
 ## [0.9.1](https://github.com/dcelasun/esp32-meter-reader/compare/v0.9.0...v0.9.1) (2026-07-30)
 
 
