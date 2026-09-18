@@ -20,6 +20,7 @@ The service extracts the reading and publishes it to Home Assistant via MQTT dis
 - [Hardware](#hardware)
 - [OCR Service](#ocr-service)
   - [Docker](#docker)
+  - [Portainer](#portainer)
   - [Kubernetes](#kubernetes)
 - [ESP32 Installation](#esp32-installation)
   - [Prerequisites](#prerequisites)
@@ -61,6 +62,39 @@ docker run -d -p 8080:8080 \
   -e METER_DIVISOR=1000 \
   ghcr.io/dcelasun/esp32-meter-reader:latest
 ```
+### Portainer
+
+In Portainer, go to **Stacks → Add stack**, give the stack a name (for example `esp32-meter-reader`). Copy the following, set the [environment variables](#configuration-1) for your environment, and paste into Portainer:
+
+```yaml
+services:
+  esp32-meter-reader:
+    image: ghcr.io/dcelasun/esp32-meter-reader:latest
+    container_name: esp32-meter-reader
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - meter-data:/data
+
+    environment:
+      STORAGE_PATH: /data
+
+      # MQTT
+      MQTT_BROKER: tcp://192.168.1.100:1883
+      MQTT_USER: homeassistant
+      MQTT_PASSWORD: secret
+
+      # Meter reading
+      METER_DIVISOR: "1000"
+
+volumes:
+  meter-data:
+```
+
+The service will be available on `http://<docker-host-ip>:8080`.
 
 ### Kubernetes
 
